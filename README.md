@@ -1,4 +1,4 @@
-# A3 - Clusterização com R
+# Clusterização com R
 
 Projeto desenvolvido para a disciplina de **Inteligência Artificial**, com o objetivo de aplicar **técnicas de clusterização (K-means)** em dados de funcionários de uma empresa fictícia.
 
