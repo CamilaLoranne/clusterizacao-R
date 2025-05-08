@@ -1,0 +1,96 @@
+# Instalar pacotes
+install.packages("ggplot2", dependencies = TRUE)
+install.packages("factoextra", dependencies = TRUE)
+
+# Carregar bibliotecas
+library(factoextra)
+library(ggplot2)
+library(readxl)
+
+# 1. Leitura do arquivo Excel
+EXER_A3 <- read_excel("EXER_A3.xlsx")
+
+# 2. Padronização dos dados
+df <- scale(EXER_A3)
+head(df, n=3)
+
+# 3. Reduzindo para variáveis selecionadas
+df_reduced <- scale(EXER_A3[, c("salario", "posicao", "anosexperiencia")])
+
+# PERGUNTA A:
+
+# 4. Gráfico do cotovelo com dados reduzidos
+fviz_nbclust(df_reduced, kmeans, method = "wss") +
+  geom_vline(xintercept = 4, linetype = 2)
+
+# 5. Clusterização k-means
+set.seed(123)
+km.res = kmeans(df_reduced, 4, nstart = 25)
+print(km.res)
+
+# 6. Adicionando cluster ao dataset original
+EXER_A3_clustered <- cbind(EXER_A3, cluster = km.res$cluster)
+head(EXER_A3_clustered)
+km.res$centers
+
+# PERGUNTA B:
+
+# 7. Médias reais por cluster (com os dados originais)
+aggregate(EXER_A3[, c("salario", "posicao", "anosexperiencia")],
+          by = list(cluster = km.res$cluster),
+          mean)
+
+# PERGUNTA C:
+
+#Média salarial por sexo
+aggregate(salario ~ sexo, data = EXER_A3, mean)
+
+#Visualização 
+ggplot(EXER_A3, aes(x = as.factor(sexo), y = salario)) +
+  geom_boxplot(fill = "#00AFBB") +
+  labs(x = "Sexo", y = "Salário", title = "Distribuição Salarial por Sexo") +
+  theme_minimal()
+
+# 8. Visualização gráfica dos clusters
+library(ggplot2)
+library(factoextra)
+
+fviz_cluster(km.res, data = df_reduced,
+             palette = c("#2E9FDF", "#00AFBB", "#E7B800", "#FC4E07"),
+             ellipse.type = "euclid",
+             star.plot = TRUE,
+             repel = TRUE,
+             ggtheme = theme_minimal()
+)
+
+#Calculo da matriz de distâncias entre os indivíduos - distância euclidiana, que é a distância “reta” entre  dois pontos no espaço.
+dista=dist(df, method="euclidean")
+
+#Mostra as distâncias entre os 3 primeiros indivíduos.
+as.matrix(dista)[1:3,1:3]
+
+#Realiza a clusterização hierárquica com o método ward.D
+dista.hc=hclust(d=dista, method="ward.D")
+
+#representação gráfica:
+library("factoextra")
+fviz_dend(dista.hc, k = 4, rect = TRUE, cex = 0.5)
+
+# Teste Estatistico:
+t.test(salario ~ sexo, data = EXER_A3)
+
+# PERGUNTA D:
+
+# Correlação salário x Anos de experiência:
+
+# Calcula o coeficiente de correlação de Pearson entre os anos de experiência e o salário.
+correlacao <- cor(EXER_A3$salario, EXER_A3$anosexperiencia)
+print(paste("Correlação entre anos de experiência e salário", round(correlacao, 2)))
+
+#Gráfico de dispersão com linha de tendência:
+ggplot(EXER_A3, aes(x = anosexperiencia, y = salario))+
+  geom_point(color = "00AFBB") +
+  geom_smooth(method ="lm", se = FALSE, color = "red")+
+  labs(x = "Anos de Experiência", y = "Salário", 
+       title = "relação entre Anos de Experiência e Salário")+
+  theme_minimal()
